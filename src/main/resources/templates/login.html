@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion ERPNext</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 6px 32px rgba(60,72,88,0.12);
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 350px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.01em;
+        }
+        .login-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .login-form label {
+            font-size: 1rem;
+            color: #4a5568;
+            margin-bottom: 0.25rem;
+            margin-top: 1rem;
+        }
+        .login-form input[type="text"],
+        .login-form input[type="password"] {
+            padding: 0.7rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            background: #f8fafc;
+            transition: border-color 0.2s;
+        }
+        .login-form input:focus {
+            border-color: #3182ce;
+            outline: none;
+            background: #fff;
+        }
+        .login-form button {
+            margin-top: 1.5rem;
+            padding: 0.8rem 0;
+            background: linear-gradient(90deg, #3182ce 0%, #4fd1c5 100%);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(49,130,206,0.08);
+            transition: background 0.2s;
+        }
+        .login-form button:hover {
+            background: linear-gradient(90deg, #2563eb 0%, #38b2ac 100%);
+        }
+        #errorMessage, #successMessage {
+            width: 100%;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1rem;
+        }
+        #errorMessage {
+            color: #e53e3e;
+        }
+        #successMessage {
+            color: #38a169;
+        }
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 1.5rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-title">Connexion</div>
+        <form id="loginForm" class="login-form">
+            <label for="usr">Nom d'utilisateur</label>
+            <input type="text" id="usr" name="usr" required autocomplete="username">
+            <label for="pwd">Mot de passe</label>
+            <input type="password" id="pwd" name="pwd" required autocomplete="current-password">
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="errorMessage"></div>
+        <div id="successMessage"></div>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                usr: document.getElementById('usr').value,
+                pwd: document.getElementById('pwd').value
+            };
+            
+            fetch('/erpnext/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect) {
+                    document.getElementById('successMessage').textContent = data.message;
+                    document.getElementById('errorMessage').textContent = '';
+                    // Rediriger vers l'URL fournie (dashboard)
+                    window.location.href = data.redirect;
+                } else {
+                    document.getElementById('errorMessage').textContent = data.message;
+                    document.getElementById('successMessage').textContent = '';
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').textContent = 'Erreur: ' + error;
+                document.getElementById('successMessage').textContent = '';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">Éléments de salaire</h1>
+            <form class="d-flex" id="search-form" th:action="@{/salary_elements/search_by_month}" method="get" style="gap: 8px;">
+                <select name="month" id="search-month" class="form-select">
+                    <option value="">Mois</option>
+                    <option th:each="entry : ${months}"
+                            th:value="${entry.key}"
+                            th:text="${entry.value}"
+                            th:selected="${param.month == entry.key}"></option>
+                </select>
+            </form>
+        </div>
+        <div th:if="${ss_error}" class="alert alert-danger mb-3" th:text="${ss_error}"></div>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Employé</th>
+                            <th>Période</th>
+                            <!-- <th>Gains (détail)</th>
+                            <th>Déductions (détail)</th> -->
+                            <th>Salaire brut</th>
+                            <th>Total déductions</th>
+                            <th>Net à payer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salary-elements-tbody">
+                        <tr th:each="ss : ${salary_elements}">
+                            <td th:text="${ss.name}"></td>
+                            <td>
+                                <span th:text="${ss.employee_name}"></span>
+                                <span class="text-muted" th:text="'(' + ${ss.employee} + ')'"></span>
+                            </td>
+                            <td>
+                                <span th:text="${ss.start_date}"></span>
+                                <span>au</span>
+                                <span th:text="${ss.end_date}"></span>
+                            </td>
+                            <!-- <td>
+                                <ul th:if="${ss.earnings != null}">
+                                    <li th:each="e : ${ss.earnings}" th:text="${e.salary_component + ' : ' + e.amount}"></li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul th:if="${ss.deductions != null}">
+                                    <li th:each="d : ${ss.deductions}" th:text="${d.salary_component + ' : ' + d.amount}"></li>
+                                </ul>
+                            </td> -->
+                            <td th:text="${ss.gross_pay}"></td>
+                            <td th:text="${ss.total_deduction}"></td>
+                            <td th:text="${ss.net_pay}"></td>
+                        </tr>
+                        <tr th:if="${salary_elements == null or #lists.isEmpty(salary_elements)}">
+                            <td colspan="8" class="text-center">Aucun élément de salaire trouvé.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <!-- Ajoute ici des scripts personnalisés si besoin -->
+    <script>
+        const searchCompanyInput = document.getElementById('search-month');
+        const tbody = document.getElementById('salary-elements-tbody');
+        const form = document.getElementById('search-form');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+
+        function triggerSearch() {
+            const monthValue = searchCompanyInput.value;
+            let url = '';
+            if (monthValue.length > 0) {
+                url = `/erpnext/salary_elements/search_by_month?month=${encodeURIComponent(monthValue)}`;
+            } else {
+                window.location.href = '/erpnext/salary_elements';
+                return;
+            }
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTbody = doc.getElementById('salary-elements-tbody');
+                    if (newTbody) {
+                        tbody.innerHTML = newTbody.innerHTML;
+                    }
+                });
+        }
+
+        searchCompanyInput.addEventListener('click', triggerSearch);
+        searchCompanyInput.addEventListener('change', triggerSearch);
+    </script>
+</th:block>
+</body>
+</html>

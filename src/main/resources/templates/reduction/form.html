@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container mt-4">
+        <h2 class="mb-4">Inserer une reduction par mois</h2>
+        <form th:action="@{/reduction/insert}" method="post">
+            <div class="mb-3">
+                <select name="month" id="search-month" class="form-select" required>
+                    <option value="">Mois</option>
+                    <option th:each="entry : ${months}"
+                            th:value="${entry.key}"
+                            th:text="${entry.value}"
+                            th:selected="${param.month == entry.key}"></option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="reduction_val" class="form-label">Valeur</label>
+                <input type="number" class="form-control" id="reduction_val" name="reduction_val" required>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Insérer</button>
+            </div>
+        </form>
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${ss_error}" class="alert alert-danger mt-3" th:text="${ss_error}"></div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <style>
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: none; }
+        .alert-danger { background: #ffebee; color: #c62828; border: none; }
+    </style>
+    <script>
+        // Optionnel : désactiver le bouton submit après clic pour éviter les doubles soumissions
+        document.querySelector('form')?.addEventListener('submit', function() {
+            this.querySelector('button[type="submit"]').disabled = true;
+        });
+    </script>
+</body>
+</html>

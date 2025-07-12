@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container mt-4">
+        <h2 class="mb-4">Mettre à jour les paramètres de salaire</h2>
+        <form th:action="@{/salary_slip/update}" method="post">
+            <div class="mb-3">
+                <label for="min_amount" class="form-label">Montant Min</label>
+                <input type="number" class="form-control" id="min_amount" name="min_amount" required min="0" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label for="max_amount" class="form-label">Montant Max</label>
+                <input type="number" class="form-control" id="max_amount" name="max_amount" required min="0" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label for="base_salary" class="form-label">Salaire Base (%)</label>
+                <input type="number" class="form-control" id="base_salary" name="base_salary" required min="0" step="0.01">
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            </div>
+        </form>
+        <div th:if="${ss_error}" class="alert alert-danger mt-3" th:text="${ss_error}"></div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <style>
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: none; }
+        .alert-danger { background: #ffebee; color: #c62828; border: none; }
+    </style>
+    <script>
+        document.querySelector('form')?.addEventListener('submit', function() {
+            this.querySelector('button[type="submit"]').disabled = true;
+        });
+    </script>
+</body>
+</html>

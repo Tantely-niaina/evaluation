@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">
+                Les fiches de paie du mois selectionné
+                <span th:text="${year_month}"></span>
+            </h1>
+            <a th:href="@{'/statistics'}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Retour aux statistiques
+            </a>
+        </div>
+        <div th:if="${ss_error}" class="alert alert-danger mb-3" th:text="${ss_error}"></div>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Employé</th>
+                            <th>Période</th>
+                            <th>Brut</th>
+                            <th>Déductions</th>
+                            <th>Net payé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="slip : ${salary_elements}">
+                            <td th:text="${slip.name}"></td>
+                            <td>
+                                <span th:text="${slip.employee_name}"></span>
+                                <span class="text-muted" th:text="'(' + ${slip.employee} + ')'"></span>
+                            </td>
+                            <td>
+                                <span th:text="${slip.start_date}"></span>
+                                <span>au</span>
+                                <span th:text="${slip.end_date}"></span>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(slip.gross_pay, 0, 'POINT', 0, 'COMMA')}"></td>
+                            <td th:text="${#numbers.formatDecimal(slip.total_deduction, 0, 'POINT', 0, 'COMMA')}"></td>
+                            <td th:text="${#numbers.formatDecimal(slip.net_pay, 0, 'POINT', 0, 'COMMA')}"></td>
+                        </tr>
+                        <tr th:if="${salary_elements == null or #lists.isEmpty(salary_elements)}">
+                            <td colspan="7" class="text-center">Aucune fiche de paie pour ce mois.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <script>
+        // Custom scripts for this page
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">Statistiques des salaires nets par mois</h1>
+            <a th:href="@{'/salary_slip/list'}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Retour aux fiches de paie
+            </a>
+        </div>
+        <div class="card p-4 mb-4">
+            <h5 class="mb-3">Évolution des salaires par mois</h5>
+            <canvas id="salaireChart" height="80"></canvas>
+            <div th:if="${evolution_error}" class="alert alert-danger mt-2" th:text="${evolution_error}"></div>
+        </div>
+        <div th:if="${ss_error}" class="alert alert-danger mb-3" th:text="${ss_error}"></div>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Total net payé (Ar)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="entry : ${salary_slips}">
+                            <td th:text="${entry.key}"></td>
+                            <td th:text="${#numbers.formatDecimal(entry.value, 0, 'POINT', 0, 'COMMA')}"></td>
+                            <td>
+                                <a th:href="@{'/statistics/details'(year_month=${entry.key})}" class="btn btn-sm btn-primary">Détails</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${salary_slips == null or #maps.isEmpty(salary_slips)}">
+                            <td colspan="2" class="text-center">Aucune donnée disponible.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<th:block th:fragment="scripts">
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-inactive { background: #ffebee; color: #c62828; }
+        .status-left { background: #fafafa; color: #757575; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let evolutionData = /*[[${evolution_data}]]*/ {};
+        if (evolutionData) {
+            let labels = Object.keys(evolutionData);
+            let netPays = labels.map(mois => evolutionData[mois]?.net_pay || 0);
+            let grossPays = labels.map(mois => evolutionData[mois]?.gross_pay || 0);
+            let deductions = labels.map(mois => evolutionData[mois]?.total_deduction || 0);
+
+            let ctx = document.getElementById('salaireChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Net payé',
+                            data: netPays,
+                            borderColor: '#2e7d32',
+                            backgroundColor: 'rgba(46,125,50,0.1)',
+                            fill: false
+                        },
+                        {
+                            label: 'Brut',
+                            data: grossPays,
+                            borderColor: '#1976d2',
+                            backgroundColor: 'rgba(25,118,210,0.1)',
+                            fill: false
+                        },
+                        {
+                            label: 'Déductions',
+                            data: deductions,
+                            borderColor: '#c62828',
+                            backgroundColor: 'rgba(198,40,40,0.1)',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        /*]]>*/
+    </script>
+</th:block>

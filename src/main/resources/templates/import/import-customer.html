@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">Importation de données</h1>
+            <form th:action="@{/reinitialiser-base}" method="post" style="margin:0;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir réinitialiser la base ? Cette action est irréversible.');">
+                    Réinitialiser la base
+                </button>
+            </form>
+        </div>
+        <div th:if="${message}" class="alert" th:classappend="${error} ? 'alert-danger' : 'alert-success'" th:utext="${message}"></div>
+        <div class="card p-4">
+            <form th:action="@{/import-customer}" method="post" enctype="multipart/form-data" id="import-form">
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-md-4">
+                        <label for="file1" class="form-label">Fichier Employés (.csv)</label>
+                        <input type="file" class="form-control" id="file1" name="file1" accept=".csv" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="file2" class="form-label">Fichier Grille salariale (.csv)</label>
+                        <input type="file" class="form-control" id="file2" name="file2" accept=".csv" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="file3" class="form-label">Fichier Attributions (.csv)</label>
+                        <input type="file" class="form-control" id="file3" name="file3" accept=".csv" required>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">Importer</button>
+                </div>
+            </form>
+        </div>
+        <div class="mt-4">
+            <h5>Instructions :</h5>
+            <ul>
+                <li>Les trois fichiers CSV sont obligatoires pour l'importation.</li>
+                <li>Le format attendu pour chaque fichier doit respecter le modèle fourni.</li>
+                <li>En cas d'erreur, seules les données valides seront importées.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <style>
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: none; }
+        .alert-danger { background: #ffebee; color: #c62828; border: none; }
+    </style>
+    <script>
+        // Optionnel : désactiver le bouton submit après clic pour éviter les doubles imports
+        document.getElementById('import-form')?.addEventListener('submit', function() {
+            this.querySelector('button[type="submit"]').disabled = true;
+        });
+    </script>
+</th:block>

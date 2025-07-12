@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">Fiche des employés</h1>
+        </div>
+        <div th:if="${error}" class="alert alert-danger mb-3" th:text="${error}"></div>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom Employé</th>
+                            <th>Employé</th>
+                            <th>Salary Structure</th>
+                            <th>À partir de la date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-tbody">
+                        <tr th:each="ssa : ${salary_slip_assignment}">
+                            <td th:text="${ssa.name}"></td>
+                            <td th:text="${ssa.employee_name}"></td>
+                            <td th:text="${ssa.name}"></td>
+                            <td th:text="${ssa.salary_structure}"></td>
+                            <td th:text="${ssa.from_date}"></td>
+                            <td>
+                                <a th:href="@{'/salary_slip/search_salary_slip'(employee=${ssa.employee})}" class="btn btn-primary btn-sm">
+                                    Voir fiche de paie
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${salary_slip_assignment == null or #lists.isEmpty(salary_slip_assignment)}">
+                            <td colspan="4" class="text-center">Aucune structure de salaire trouvée.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-inactive { background: #ffebee; color: #c62828; }
+        .status-left { background: #fafafa; color: #757575; }
+    </style>
+</th:block>
+</body>
+</html>

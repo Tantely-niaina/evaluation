@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Salary Slips avec Composants</title>
+</head>
+<body>
+    <div th:fragment="content" id="content">
+        <div class="minimal-card">
+            <h2 class="minimal-title">Liste des Salary Slips avec Détail des Gains et Déductions</h2>
+            
+            <div class="mb-4">
+                <form th:action="@{/salary_slip/alea2}" method="get">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="montantmin" class="form-label">Montant Min</label>
+                            <input type="number" class="form-control" id="montantmin" name="montantmin" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="montantmax" class="form-label">Montant Max</label>
+                            <input type="number" class="form-control" id="montantmax" name="montantmax" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="Elements" class="form-label">Élément Salaire</label>
+                            <select class="form-select" id="Elements" name="Elements" required>
+                                <option value="" disabled selected>-- Sélectionner --</option>
+                                <th:block th:each="Element : ${Elements}">
+                                    <option th:value="${Element.name}" th:text="${Element.name}"></option>
+                                </th:block>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel"></i> Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div th:if="${ss_error}" class="alert alert-danger" role="alert">
+                Erreur : <span th:text="${ss_error}"></span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom</th>
+                            <th>Employé</th>
+                            <th>Début</th>
+                            <th>Fin</th>
+                            <th>Net à payer</th>
+                            <th>Gains (Earnings)</th>
+                            <th>Déductions (Deductions)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="slip : ${salary_slips}">
+                            <td th:text="${slip.name}"></td>
+                            <td th:text="${slip.employee_name}"></td>
+                            <td th:text="${slip.start_date}"></td>
+                            <td th:text="${slip.end_date}"></td>
+                            <td th:text="${slip.net_pay}"></td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    <li th:each="earning : ${slip.earnings}" class="mb-1">
+                                        <strong th:text="${earning.salary_component}"></strong>:
+                                        <span th:text="${earning.amount}"></span>
+                                    </li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    <li th:each="deduction : ${slip.deductions}" class="mb-1">
+                                        <strong th:text="${deduction.salary_component}"></strong>:
+                                        <span th:text="${deduction.amount}"></span>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scripts">
+        <script>
+            // Optionnel : désactiver le bouton submit après clic pour éviter les doubles soumissions
+            document.querySelector('form')?.addEventListener('submit', function() {
+                this.querySelector('button[type="submit"]').disabled = true;
+            });
+        </script>
+    </th:block>
+</body>
+</html>

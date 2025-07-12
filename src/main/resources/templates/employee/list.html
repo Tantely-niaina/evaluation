@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">Liste des employés</h1>
+            <form class="d-flex" id="search-form" th:action="@{/employee/search_id}" method="get" style="gap: 8px;">
+                <input type="text" name="identifiant" id="search-identifiant" class="form-control" placeholder="Rechercher par ID" th:value="${param.identifiant}">
+                <input type="text" name="nom_complet" id="search-nom" class="form-control" placeholder="Rechercher par nom" th:value="${param.nom_complet}">
+                <select name="company" id="search-company" class="form-select">
+                    <option value="">Toutes les compagnies</option>
+                    <option th:each="comp : ${companies}" th:value="${comp.name}" th:text="${comp.name}" th:selected="${param.company == comp.name}"></option>
+                </select>
+                <a th:href="@{/employee}" class="btn btn-outline-secondary" th:if="${param.identifiant} or ${param.nom_complet} or ${param.company}">Réinitialiser</a>
+            </form>
+            <!-- <a th:href="@{/employee/create}" class="btn btn-primary">Ajouter un employé</a>  -->
+        </div>
+        <div th:if="${error}" class="alert alert-danger mb-3" th:text="${error}"></div>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom Complet</th>
+                            <th>Company</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-tbody">
+                        <tr th:each="emp : ${employees}">
+                            <td th:text="${emp.name}"></td>
+                            <td th:text="${emp.employee_name}"></td>
+                            <td th:text="${emp.company}"></td>
+                            <td>
+                                <span th:text="${emp.status}" th:classappend="'status-badge status-' + ${emp.status?.toLowerCase()}"></span>
+                            </td>
+                            <td>
+                                <a th:href="@{'/salary_slip/search_salary_slip'(employee=${emp.name})}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Voir fiche de paie
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${employees == null or #lists.isEmpty(employees)}">
+                            <td colspan="4" class="text-center">Aucun employé trouvé.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-inactive { background: #ffebee; color: #c62828; }
+        .status-left { background: #fafafa; color: #757575; }
+    </style>
+    <script>
+        const searchIdInput = document.getElementById('search-identifiant');
+        const searchNomInput = document.getElementById('search-nom');
+        const searchCompanyInput = document.getElementById('search-company');
+        const tbody = document.getElementById('employee-tbody');
+        const form = document.getElementById('search-form');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+
+        let timeout = null;
+        function triggerSearch() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const idValue = searchIdInput.value.trim();
+                const nomValue = searchNomInput.value.trim();
+                const companyValue = searchCompanyInput.value;
+                let url = '';
+                if (idValue.length > 0) {
+                    url = `/erpnext/employee/search_id?identifiant=${encodeURIComponent(idValue)}`;
+                } else if (nomValue.length > 0) {
+                    url = `/erpnext/employee/search_name?nom_complet=${encodeURIComponent(nomValue)}`;
+                } else if (companyValue.length > 0) {
+                    url = `/erpnext/employee/search_company?company=${encodeURIComponent(companyValue)}`;
+                } else {
+                    window.location.href = '/erpnext/employee';
+                    return;
+                }
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newTbody = doc.getElementById('employee-tbody');
+                        if (newTbody) {
+                            tbody.innerHTML = newTbody.innerHTML;
+                        }
+                    });
+            }, 300);
+        }
+
+        searchIdInput.addEventListener('input', triggerSearch);
+        searchNomInput.addEventListener('input', triggerSearch);
+        searchCompanyInput.addEventListener('change', triggerSearch);
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">
+                Détail de la fiche de paie
+            </h1>
+            <div>
+                <a th:href="@{'/salary_slip/export_pdf'(name=${salary_slip.name})}" class="btn btn-primary btn-sm me-2" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+                </a>
+                <a th:href="@{'/salary_slip/search_salary_slip'(employee=${salary_slip.employee})}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
+        <div th:if="${error}" class="alert alert-danger mb-3" th:text="${error}"></div>
+        <div th:if="${salary_slip != null}" class="card p-4">
+            <h5 class="mb-3" th:text="'Fiche de paie n° ' + ${salary_slip.name}"></h5>
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <strong>Employé :</strong>
+                    <span th:text="${salary_slip.employee_name}"></span>
+                    <span class="text-muted" th:text="'(' + ${salary_slip.employee} + ')'"></span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Statut :</strong>
+                    <span th:text="${salary_slip.status}"></span>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4">
+                    <strong>Département :</strong>
+                    <span th:text="${salary_slip.department}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Poste :</strong>
+                    <span th:text="${salary_slip.designation}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Branche :</strong>
+                    <span th:text="${salary_slip.branch}"></span>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4">
+                    <strong>Entreprise :</strong>
+                    <span th:text="${salary_slip.company}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Structure salariale :</strong>
+                    <span th:text="${salary_slip.salary_structure}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Fréquence :</strong>
+                    <span th:text="${salary_slip.payroll_frequency}"></span>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4">
+                    <strong>Période :</strong>
+                    <span th:text="${salary_slip.start_date}"></span>
+                    <span>au</span>
+                    <span th:text="${salary_slip.end_date}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Date de génération :</strong>
+                    <span th:text="${salary_slip.posting_date}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Devise :</strong>
+                    <span th:text="${salary_slip.currency}"></span>
+                </div>
+            </div>
+            <hr>
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <strong>Jours ouvrés :</strong>
+                    <span th:text="${salary_slip.total_working_days}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Jours payés :</strong>
+                    <span th:text="${salary_slip.payment_days}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Absences :</strong>
+                    <span th:text="${salary_slip.absent_days}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Congés sans solde :</strong>
+                    <span th:text="${salary_slip.leave_without_pay}"></span>
+                </div>
+            </div>
+            <hr>
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <strong>Brut :</strong>
+                    <span th:text="${salary_slip.gross_pay}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Déductions :</strong>
+                    <span th:text="${salary_slip.total_deduction}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Net à payer :</strong>
+                    <span th:text="${salary_slip.net_pay}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Total arrondi :</strong>
+                    <span th:text="${salary_slip.rounded_total}"></span>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <strong>Brut YTD :</strong>
+                    <span th:text="${salary_slip.gross_year_to_date}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Net YTD :</strong>
+                    <span th:text="${salary_slip.year_to_date}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Net MTD :</strong>
+                    <span th:text="${salary_slip.month_to_date}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>CTC :</strong>
+                    <span th:text="${salary_slip.ctc}"></span>
+                </div>
+            </div>
+            <hr>
+            <div class="row mb-2">
+                <div class="col-md-4">
+                    <strong>Banque :</strong>
+                    <span th:text="${salary_slip.bank_name}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Compte bancaire :</strong>
+                    <span th:text="${salary_slip.bank_account_no}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Mode de paiement :</strong>
+                    <span th:text="${salary_slip.mode_of_payment}"></span>
+                </div>
+            </div>
+            <hr>
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <strong>Total gains :</strong>
+                    <span th:text="${salary_slip.total_earnings}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Gains non imposables :</strong>
+                    <span th:text="${salary_slip.non_taxable_earnings}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Déductions avant impôt :</strong>
+                    <span th:text="${salary_slip.deductions_before_tax_calculation}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Déclaration d'exonération :</strong>
+                    <span th:text="${salary_slip.tax_exemption_declaration}"></span>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <strong>Montant exonération standard :</strong>
+                    <span th:text="${salary_slip.standard_tax_exemption_amount}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Montant imposable annuel :</strong>
+                    <span th:text="${salary_slip.annual_taxable_amount}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>IR déduit à ce jour :</strong>
+                    <span th:text="${salary_slip.income_tax_deducted_till_date}"></span>
+                </div>
+                <div class="col-md-3">
+                    <strong>IR mois courant :</strong>
+                    <span th:text="${salary_slip.current_month_income_tax}"></span>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <strong>IR futur :</strong>
+                    <span th:text="${salary_slip.future_income_tax_deductions}"></span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Total IR :</strong>
+                    <span th:text="${salary_slip.total_income_tax}"></span>
+                </div>
+            </div>
+            <hr>
+            <div class="row mb-2">
+                <div class="col-md-4">
+                    <strong>Journal Entry :</strong>
+                    <span th:text="${salary_slip.journal_entry}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Payroll Entry :</strong>
+                    <span th:text="${salary_slip.payroll_entry}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Lettre entête :</strong>
+                    <span th:text="${salary_slip.letter_head}"></span>
+                </div>
+            </div>
+        </div>
+        <div th:if="${salary_slip == null && error == null}" class="alert alert-warning">
+            Aucune fiche de paie à afficher.
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <script>
+        // Custom scripts for this page
+    </script>
+</th:block>
+</body>
+</html>

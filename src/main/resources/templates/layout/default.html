@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</head>
+<body>
+    <div class="d-flex">
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        <div class="flex-grow-1" style="background: #fafbfc;">
+            <nav class="navbar navbar-expand bg-light px-4" style="min-height: 64px;">
+                <div class="container-fluid justify-content-end">
+                    <div class="profile-menu">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 500;">
+                                <span th:text="${session.user}">Utilisateur</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/erpnext/profile">Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/erpnext/logout">Déconnexion</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="container-fluid py-4">
+                <div th:replace="~{:: #content}"></div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<body>
+<div id="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3" style="font-weight: 600; letter-spacing: 0.01em;">Fiches de paie des employés</h1>
+            <a th:href="@{'/employee'}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Retour à la liste des employés
+            </a>
+        </div>
+        <div th:if="${error}" class="alert alert-danger mb-3" th:text="${error}"></div>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom Employé</th>
+                            <th>Date de génération</th>
+                            <th>Rémunération nette</th>
+                            <th>Structure salariale</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-tbody">
+                        <tr th:each="ss : ${salary_slips}">
+                            <td th:text="${ss.name}"></td>
+                            <td th:text="${ss.employee_name}"></td>
+                            <td th:text="${ss.posting_date}"></td>
+                            <td th:text="${ss.net_pay}"></td>
+                            <td th:text="${ss.salary_structure}"></td>
+                            <td th:text="${ss.status}"></td>
+                            <td>
+                                <a th:href="@{'/salary_slip/details'(name=${ss.name})}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Voir
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${salary_slips == null or #lists.isEmpty(salary_slips)}">
+                            <td colspan="4" class="text-center">Aucune fiche de paie trouvée.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-inactive { background: #ffebee; color: #c62828; }
+        .status-left { background: #fafafa; color: #757575; }
+    </style>
+</th:block>
+</body>
+</html>
