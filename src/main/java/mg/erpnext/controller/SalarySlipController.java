@@ -147,6 +147,7 @@ public class SalarySlipController {
             @RequestParam("start_date") String start_date,
             @RequestParam("end_date") String end_date,
             @RequestParam(value = "salaire_base", required = false) String salaire_base,
+            @RequestParam(value = "ecraser", required = false) boolean ecraser,
             @RequestParam(value = "moyenne", required = false) String moyenne,
             HttpSession session,
             Model model) {
@@ -177,7 +178,7 @@ public class SalarySlipController {
             return "salary_slip/form";
         }
         
-        ApiResponse<List<SalarySlip>> response = salarySlipService.generateSalarySlipsForUnoccupiedMonths(employeeResponse, start_date, end_date, session);
+ ApiResponse<List<SalarySlip>> response = salarySlipService.generateSalarySlipsForUnoccupiedMonths(employeeResponse, start_date, end_date, ecraser, session);
         model.addAttribute("salary_slip", response.getData());
         model.addAttribute("ss_error", response.getError());
         return "salary_slip/form";

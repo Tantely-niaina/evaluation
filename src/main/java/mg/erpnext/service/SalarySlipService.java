@@ -1,32 +1,36 @@
 package mg.erpnext.service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpSession;
 import mg.erpnext.model.ApiResponse;
 import mg.erpnext.model.Employee;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import mg.erpnext.model.SalarySlip;
 import mg.erpnext.model.MonthReduction;
+import mg.erpnext.model.SalarySlip;
 import mg.erpnext.model.SalarySlipAssignment;
-
-import java.util.List;
-import java.util.Set;
-import java.time.LocalDate;
-import java.time.Month;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 
 @Service
 public class SalarySlipService {
@@ -370,8 +374,8 @@ public class SalarySlipService {
         }
     }
 
-    public ApiResponse<List<SalarySlip>> generateSalarySlipsForUnoccupiedMonths(
-        Employee employee, String startDate, String endDate, HttpSession session) {
+  public ApiResponse<List<SalarySlip>> generateSalarySlipsForUnoccupiedMonths(
+        Employee employee, String startDate, String endDate, Boolean ecraser, HttpSession session) {
         logger.info("Appel generateSalarySlipsForUnoccupiedMonths() pour employé: {}, période: {} à {}", employee.getName(), startDate, endDate);
         ApiResponse<SalarySlipAssignment> cancelled_ssa = new ApiResponse<>();
         ApiResponse<SalarySlipAssignment> updated_ssa = new ApiResponse<>();
@@ -410,7 +414,13 @@ public class SalarySlipService {
 
 
             String ymStr = ym.toString(); // format yyyy-MM
-            if (occupiedMonths.contains(ymStr)) continue;
+
+            if(!ecraser && occupiedMonths.contains(ymStr)) {
+                logger.info("Le mois {} est déjà occupé pour l'employé {}, fiche de paie non créée.", ymStr, employee.getName());
+                continue; // Passer au mois suivant si le mois est déjà occupé
+            } else {
+                ApiResponse<SalarySlip> existingSlipResp = cancelSalarySlipByMonthAndEmployee(ymStr, employee.getName(), session);
+            }
 
             // Début et fin du mois
             String slipStart = ym.atDay(1).toString();
@@ -678,7 +688,38 @@ public class SalarySlipService {
         logger.info("getAllBaseValues() retourne {} valeurs de base", bases.size());
         return bases;
     }
+  public ApiResponse<SalarySlip> cancelSalarySlipByMonthAndEmployee(
+            String monthYear, String employeeName, HttpSession session) {
+        logger.info("Appel cancelSalarySlipByMonthAndEmployee() pour mois: {}, employé: {}", monthYear, employeeName);
+        try {
+            // 1. Récupérer les fiches de paie pour l'employé et le mois spécifié
+            ApiResponse<List<SalarySlip>> slipsResp = searchSalarySlipByEmployee(employeeName, session);
+            if (slipsResp.getData() == null || slipsResp.getData().isEmpty()) {
+                return new ApiResponse<>("Aucune fiche de paie trouvée pour cet employé.");
+            }
 
+            // 2. Filtrer par mois
+            List<SalarySlip> filteredSlips = slipsResp.getData().stream()
+                .filter(slip -> slip.getStart_date() != null && slip.getStart_date().startsWith(monthYear))
+                .collect(Collectors.toList());
+
+            if (filteredSlips.isEmpty()) {
+                return new ApiResponse<>("Aucune fiche de paie trouvée pour ce mois.");
+            }
+
+            // 3. Annuler chaque fiche de paie filtrée
+            ApiResponse<List<SalarySlip>> cancelledSlips = cancelSalarySlips(filteredSlips, session);
+            if (cancelledSlips.getError() != null) {
+                return new ApiResponse<>(cancelledSlips.getError());
+            }
+
+            // 4. Retourner la première fiche annulée
+            return new ApiResponse<>(cancelledSlips.getData().get(0));
+        } catch (Exception e) {
+            logger.error("Erreur dans cancelSalarySlipByMonthAndEmployee(): {}", e.getMessage(), e);
+            return new ApiResponse<>("Erreur lors de l'annulation de la fiche de paie: " + e.getMessage());
+        }
+    }
 public Double calculeMoyenne(List<Double> base) {
     if (base == null || base.isEmpty()) {
         return 0.0; // ou null si tu veux signaler qu’il n’y a rien
