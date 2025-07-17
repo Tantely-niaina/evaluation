@@ -1,57 +1,72 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="sidebar">
     <div class="sidebar d-flex flex-column flex-shrink-0 p-4" style="width: 240px; height: 100vh;">
         <a href="/" class="mb-4 text-decoration-none sidebar-title">
-            ERP Next
+            <i class="fas fa-cubes me-2"></i>ERP Next
         </a>
         <ul class="nav nav-pills flex-column mb-auto gap-2">
             <li class="nav-item">
                 <a href="/erpnext/dashboard" class="nav-link active" aria-current="page">
+                    <i class="fas fa-tachometer-alt"></i>
                     Dashboard
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/employee" class="nav-link">
+                    <i class="fas fa-users"></i>
                     Employee
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/salary_elements" class="nav-link">
+                    <i class="fas fa-money-bill-wave"></i>
                     Elements de salaire
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/statistics" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
                     Statistiques
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/import-csv" class="nav-link">
+                    <i class="fas fa-file-import"></i>
                     Gestion de données
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/salary_slip/form" class="nav-link">
+                    <i class="fas fa-file-invoice-dollar"></i>
                     Generation de fiches de paie
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/salary_slip/update_form" class="nav-link">
+                    <i class="fas fa-edit"></i>
                     Mise à jour de fiches de paie
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/erpnext/reduction" class="nav-link">
+                    <i class="fas fa-minus-circle"></i>
                     Insertion de reduction par mois
                 </a>
             </li>
-             <li class="nav-item">
+            <li class="nav-item">
                 <a href="/erpnext/salary_slip/with_components" class="nav-link">
+                    <i class="fas fa-random"></i>
                     alea 2
                 </a>
             </li>
-            <!-- Add more menu items here -->
+            <li class="nav-item">
+                <a href="/erpnext/salary_slip/alea3" class="nav-link">
+                    <i class="fas fa-random"></i>
+                    hisotrique
+                </a>
+            </li>
         </ul>
     </div>
 </div>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Prévisualisation des données</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2>Employés <span class="badge bg-light text-dark" th:text="${employes.size()} + ' éléments'"></span></h2>
+    </div>
+    <div class="card-body table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Réf</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Genre</th>
+                    <th>Date Embauche</th>
+                    <th>Date Naissance</th>
+                    <th>Company</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="emp : ${employes}">
+                    <td th:text="${emp.ref}"></td>
+                    <td th:text="${emp.nom}"></td>
+                    <td th:text="${emp.prenom}"></td>
+                    <td th:text="${emp.genre}"></td>
+                    <td th:text="${#dates.format(emp.dateEmbauche, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${#dates.format(emp.dateNaissance, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${emp.company}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Section Grilles Salariales -->
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h2>Grilles Salariales <span class="badge bg-light text-dark" th:text="${structures.size()} + ' éléments'"></span></h2>
+    </div>
+    <div class="card-body table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Structure</th>
+                    <th>Nom</th>
+                    <th>Abbr</th>
+                    <th>Type</th>
+                    <th>Valeur</th>
+                    <th>Company</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="struct : ${structures}">
+                    <td th:text="${struct.salary_structure}"></td>
+                    <td th:text="${struct.name}"></td>
+                    <td th:text="${struct.abbr}"></td>
+                    <td th:text="${struct.type}"></td>
+                    <td th:text="${struct.valeur}"></td>
+                    <td th:text="${struct.company}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Section Attributions -->
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h2>Attributions <span class="badge bg-light text-dark" th:text="${attributions.size()} + ' éléments'"></span></h2>
+    </div>
+    <div class="card-body table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Mois</th>
+                    <th>Employé</th>
+                    <th>Salaire Base</th>
+                    <th>Grille</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="attr : ${attributions}">
+                    <td th:text="${attr.mois}"></td>
+                    <td th:text="${attr.employe.nom + ' ' + attr.employe.prenom + ' (' + attr.employe.ref + ')'}"></td>
+                    <td th:text="${#numbers.formatCurrency(attr.salaire_base)}"></td>
+                    <td th:text="${attr.salaire}"></td>
+                </tr>
+            </tbody>
+            
+        </table>
+
+
+</div>
+</div>
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h2>Attributions <span class="badge bg-light text-dark" th:text="${attributions.size()} + ' éléments'"></span></h2>
+    </div>
+    <div class="card-body table-container">
+        <table class="table table-striped">
+        <thead>
+
+    <tr>
+        <th>Réf</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Genre</th>
+        <th>Date Embauche</th>
+        <th>Date Naissance</th>
+        <th>Company</th>
+        <th>Nombre de bulletins</th>
+    </tr>
+</thead>
+<tbody>
+    <tr th:each="emp : ${employes}">
+        <td th:text="${emp.ref}"></td>
+        <td th:text="${emp.nom}"></td>
+        <td th:text="${emp.prenom}"></td>
+        <td th:text="${emp.genre}"></td>
+        <td th:text="${#dates.format(emp.dateEmbauche, 'dd/MM/yyyy')}"></td>
+        <td th:text="${#dates.format(emp.dateNaissance, 'dd/MM/yyyy')}"></td>
+        <td th:text="${emp.company}"></td>
+        <td th:text="${salaireSlipCount[emp.ref] != null ? salaireSlipCount[emp.ref] : 0}"></td>
+    </tr>
+</tbody>
+        </table>
+    </div>
+</div>        
+
+    <!-- Section Erreurs -->
+    <div th:if="${not #lists.isEmpty(errorsEmployes) or not #lists.isEmpty(errorsStructures) or not #lists.isEmpty(errorsAttributions)}">
+        <div class="alert alert-warning mt-4">
+            <h3>Erreurs détectées</h3>
+            <div th:if="${not #lists.isEmpty(errorsEmployes)}">
+                <h5>Employés:</h5>
+                <ul>
+                    <li th:each="err : ${errorsEmployes}" th:text="${err}"></li>
+                </ul>
+            </div>
+            <div th:if="${not #lists.isEmpty(errorsStructures)}">
+                <h5>Grilles salariales:</h5>
+                <ul>
+                    <li th:each="err : ${errorsStructures}" th:text="${err}"></li>
+                </ul>
+            </div>
+            <div th:if="${not #lists.isEmpty(errorsAttributions)}">
+                <h5>Attributions:</h5>
+                <ul>
+                    <li th:each="err : ${errorsAttributions}" th:text="${err}"></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Boutons d'action -->
+    <div class="d-flex justify-content-between mt-4">
+        <a href="/erpnext/import-csv" class="btn btn-secondary">Retour</a>
+        <form th:action="@{/confirm-import}" method="post">
+            <button type="submit" class="btn btn-primary">Confirmer l'import</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -1,13 +1,13 @@
 package mg.erpnext.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +74,26 @@ public class SalarySlipAssignmentService {
             logger.error("Erreur lors de la récupération des Salary Structure Assignment: {}", e.getMessage(), e);
             return new ApiResponse<>("Erreur lors de la récupération des fiches de paie: " + e.getMessage());
         }
+    }
+     public Double calculerMoyenne(ApiResponse<List<SalarySlipAssignment>> response) {
+        if (response.getData() == null || response.getData().isEmpty()) {
+            logger.warn("Aucun SalarySlipAssignment trouvé pour le calcul de la moyenne.");
+            return null;
+        }
+        double total = response.getData().stream()
+            .filter(ssa -> ssa.getBase() != null)
+            .mapToDouble(SalarySlipAssignment::getBase)
+            .sum();
+        double count = response.getData().stream()
+            .filter(ssa -> ssa.getBase() != null)
+            .count();
+        if (count == 0) {
+            logger.warn("Aucune base valide trouvée pour le calcul de la moyenne.");
+            return null;
+        }
+        double average = total / count;
+        logger.info("Moyenne des bases calculée: {}", average);
+        return average;
     }
 
     public ApiResponse<List<SalarySlipAssignment>> searchSalaryStructureAssignmentByEmployee(HttpSession session, String employeeName) {
@@ -469,7 +489,7 @@ public class SalarySlipAssignmentService {
             SalarySlipAssignment assignment = new SalarySlipAssignment();
             assignment.setEmployee(employee.getName());
             assignment.setEmployee_name(employee.getEmployee_name());
-            assignment.setSalary_structure("gasy1");
+            assignment.setSalary_structure("g1");
             String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
             assignment.setFrom_date(today);
             assignment.setCompany(employee.getCompany());

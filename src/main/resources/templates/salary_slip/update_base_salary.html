@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier le Salaire de Base</title>
+</head>
+<body>
+    <div th:fragment="content" id="content">
+        <div class="minimal-card">
+            <h2 class="minimal-title">Modification du Salaire de Base</h2>
+            <form th:action="@{/salary_slip/update_base_salary}" method="post">
+                <p>
+                    <label for="baseSalary" class="form-label">Salaire de Base</label>
+                    <input type="number" class="form-control" id="baseSalary" name="baseSalary" 
+                           th:value="${salary_slip.baseSalary}" required>
+                </p>
+            </form>
+            <div th:if="${success}" class="alert alert-success mt-3" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-danger mt-3" th:text="${error}"></div>
+        </div>
+    </div>
+</body>
+</html>

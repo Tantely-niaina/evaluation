@@ -13,7 +13,7 @@
         </div>
         <div th:if="${message}" class="alert" th:classappend="${error} ? 'alert-danger' : 'alert-success'" th:utext="${message}"></div>
         <div class="card p-4">
-            <form th:action="@{/import-customer}" method="post" enctype="multipart/form-data" id="import-form">
+            <form th:action="@{/alea1}" method="post" enctype="multipart/form-data" id="import-form">
                 <div class="row g-3 align-items-center mb-3">
                     <div class="col-md-4">
                         <label for="file1" class="form-label">Fichier Employés (.csv)</label>

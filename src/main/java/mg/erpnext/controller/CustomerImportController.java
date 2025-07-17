@@ -1,5 +1,8 @@
 package mg.erpnext.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpSession;
 import mg.erpnext.model.AttributionCSV;
 import mg.erpnext.model.EmployeCSV;
 import mg.erpnext.model.ParseResult;
@@ -18,8 +22,6 @@ import mg.erpnext.service.EmployeCSVService;
 import mg.erpnext.service.FicheEmployeCSVService;
 import mg.erpnext.service.GrilleSalaireCSVService;
 import mg.erpnext.service.Reinicialisationbaseservice;
-
-import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class CustomerImportController {
@@ -48,93 +50,168 @@ public class CustomerImportController {
             return "error/error";
         }
     }
+@PostMapping("/alea1")
+public String showPreviewPage(@RequestParam("file1") MultipartFile file1,
+                            @RequestParam("file2") MultipartFile file2,
+                            @RequestParam("file3") MultipartFile file3,
+                            Model model,
+                            HttpSession session) {
+    try {
+        // Parsez les fichiers pour la prévisualisation
+        ParseResult<EmployeCSV> employesResult = customerService.parseCSV(file1);
+        ParseResult<SalaryStructureCSV> structuresResult = grilleSalaireCSVService.parseCSVsalarystructure(file2);
+        ParseResult<AttributionCSV> attributionsResult = attributionCSVService.parseCSVAttributionSalariale(
+            file3, 
+            employesResult.getValidItems()
+        );
+        // Calculer le nombre de salaire slip par employé (clé = ref, valeur = nombre)
+        Map<String, Integer> salaireSlipCount = new HashMap<>();
+        for (AttributionCSV attr : attributionsResult.getValidItems()) {
+            String ref = attr.getEmploye().getRef();
+            salaireSlipCount.put(ref, salaireSlipCount.getOrDefault(ref, 0) + 1);
+        }
+        model.addAttribute("salaireSlipCount", salaireSlipCount);
+        // Ajoutez les données au modèle - utilisez getValidItems() pour obtenir les listes
+        model.addAttribute("employes", employesResult.getValidItems());
+        model.addAttribute("structures", structuresResult.getValidItems());
+        model.addAttribute("attributions", attributionsResult.getValidItems());
+        model.addAttribute("errorsEmployes", employesResult.getErrors());
+        model.addAttribute("errorsStructures", structuresResult.getErrors());
+        model.addAttribute("errorsAttributions", attributionsResult.getErrors());
 
-    @PostMapping("/import-customer")
-    public String handleFileUpload(@RequestParam("file1") MultipartFile file1,
-                                @RequestParam("file2") MultipartFile file2,
-                                @RequestParam("file3") MultipartFile file3,
-                                RedirectAttributes redirectAttributes,
-                                HttpSession session) {
+        // Stockez les listes d'objets parsés en session pour la confirmation
+        session.setAttribute("employes", employesResult.getValidItems());
+        session.setAttribute("structures", structuresResult.getValidItems());
+        session.setAttribute("attributions", attributionsResult.getValidItems());
+
+        return "import/preview-import";
+    } catch (Exception e) {
+        model.addAttribute("message", "Erreur lors de la lecture des fichiers: " + e.getMessage());
+        return "import/import-customer";
+    }
+}
+@PostMapping("/confirm-import")
+public String confirmImport(HttpSession session, RedirectAttributes redirectAttributes) {
+    try {
+        // Récupérer les listes depuis la session
+        @SuppressWarnings("unchecked")
+        java.util.List<EmployeCSV> employes = (java.util.List<EmployeCSV>) session.getAttribute("employes");
+        @SuppressWarnings("unchecked")
+        java.util.List<SalaryStructureCSV> structures = (java.util.List<SalaryStructureCSV>) session.getAttribute("structures");
+        @SuppressWarnings("unchecked")
+        java.util.List<AttributionCSV> attributions = (java.util.List<AttributionCSV>) session.getAttribute("attributions");
+
+        // Vérifier que les listes existent bien en session
+        if (employes == null || structures == null || attributions == null) {
+            redirectAttributes.addFlashAttribute("message", "Les données ont expiré. Veuillez réimporter les fichiers.");
+            redirectAttributes.addFlashAttribute("error", true);
+            return "redirect:/import-csv";
+        }
+
+        // Importer les données
+        ficheEmployeService.import_trois_fichiers(
+            employes,
+            structures,
+            attributions,
+            session
+        );
+
+        // Nettoyer la session APRÈS l'import réussi
+        session.removeAttribute("employes");
+        session.removeAttribute("structures");
+        session.removeAttribute("attributions");
+
+        redirectAttributes.addFlashAttribute("message", "Importation réussie !");
+        return "redirect:/import-csv";
+
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("message", "Échec de l'import: " + e.getMessage());
+        redirectAttributes.addFlashAttribute("error", true);
+        return "redirect:/import-csv";
+    }
+}
+
+private String handleFileUpload(HttpSession session, RedirectAttributes redirectAttributes) {
+    try {
+        // Récupérer les fichiers depuis la session (déjà fait dans confirmImport)
+        MultipartFile file1 = (MultipartFile) session.getAttribute("file1");
+        MultipartFile file2 = (MultipartFile) session.getAttribute("file2");
+        MultipartFile file3 = (MultipartFile) session.getAttribute("file3");
 
         // Vérification des fichiers
-        if (file1.isEmpty() || file2.isEmpty() || file3.isEmpty()) {
+        if (file1 == null || file2 == null || file3 == null || 
+            file1.isEmpty() || file2.isEmpty() || file3.isEmpty()) {
             redirectAttributes.addFlashAttribute("message", "Veuillez sélectionner les trois fichiers.");
             return "redirect:/import-csv";
         }
 
-        try {
-            // Parsing des fichiers avec gestion des erreurs
-            ParseResult<EmployeCSV> resultEmployes = customerService.parseCSV(file1);
-            ParseResult<SalaryStructureCSV> resultStructures = grilleSalaireCSVService.parseCSVsalarystructure(file2);
-            ParseResult<AttributionCSV> resultAttributions = attributionCSVService.parseCSVAttributionSalariale(file3, resultEmployes.getValidItems());
+        // Le reste de votre logique existante...
+        ParseResult<EmployeCSV> resultEmployes = customerService.parseCSV(file1);
+        ParseResult<SalaryStructureCSV> resultStructures = grilleSalaireCSVService.parseCSVsalarystructure(file2);
+        ParseResult<AttributionCSV> resultAttributions = attributionCSVService.parseCSVAttributionSalariale(
+            file3, 
+            resultEmployes.getValidItems()
+        );
 
-            // Construction du message de résultat
-            StringBuilder messageBuilder = new StringBuilder();
-            boolean hasErrors = false;
+        StringBuilder messageBuilder = new StringBuilder();
+        boolean hasErrors = false;
 
-            // Vérification des erreurs pour chaque fichier
-            if (resultEmployes.hasErrors() || resultStructures.hasErrors() || resultAttributions.hasErrors()) {
-                hasErrors = true;
-                
-                messageBuilder.append("Importation partielle réussie, mais avec des erreurs :<br/><br/>");
-                
-                if (resultEmployes.hasErrors()) {
-                    messageBuilder.append("Erreurs dans le fichier Employés :<br/>")
-                                .append(String.join("<br/>", resultEmployes.getErrors()))
-                                .append("<br/><br/>");
-                }
-                
-                if (resultStructures.hasErrors()) {
-                    messageBuilder.append("Erreurs dans le fichier Grilles salariales :<br/>")
-                                .append(String.join("<br/>", resultStructures.getErrors()))
-                                .append("<br/><br/>");
-                }
-                
-                if (resultAttributions.hasErrors()) {
-                    messageBuilder.append("Erreurs dans le fichier Attributions :<br/>")
-                                .append(String.join("<br/>", resultAttributions.getErrors()))
-                                .append("<br/>");
-                }
-            } else {
-                messageBuilder.append("Importation réussie !<br/>")
-                            .append("- Employés : ").append(resultEmployes.getValidItems().size()).append("<br/>")
-                            .append("- Grilles salariales : ").append(resultStructures.getValidItems().size()).append("<br/>")
-                            .append("- Attributions : ").append(resultAttributions.getValidItems().size());
+        if (resultEmployes.hasErrors() || resultStructures.hasErrors() || resultAttributions.hasErrors()) {
+            hasErrors = true;
+            messageBuilder.append("Importation partielle réussie, mais avec des erreurs :<br/><br/>");
+            
+            if (resultEmployes.hasErrors()) {
+                messageBuilder.append("Erreurs dans le fichier Employés :<br/>")
+                            .append(String.join("<br/>", resultEmployes.getErrors()))
+                            .append("<br/><br/>");
             }
+            
+            if (resultStructures.hasErrors()) {
+                messageBuilder.append("Erreurs dans le fichier Grilles salariales :<br/>")
+                            .append(String.join("<br/>", resultStructures.getErrors()))
+                            .append("<br/><br/>");
+            }
+            
+            if (resultAttributions.hasErrors()) {
+                messageBuilder.append("Erreurs dans le fichier Attributions :<br/>")
+                            .append(String.join("<br/>", resultAttributions.getErrors()))
+                            .append("<br/>");
+            }
+        } else {
+            messageBuilder.append("Importation réussie !<br/>")
+                        .append("- Employés : ").append(resultEmployes.getValidItems().size()).append("<br/>")
+                        .append("- Grilles salariales : ").append(resultStructures.getValidItems().size()).append("<br/>")
+                        .append("- Attributions : ").append(resultAttributions.getValidItems().size());
+        }
 
-            // Importation des données valides seulement si au moins un élément valide par fichier
-            if (!resultEmployes.getValidItems().isEmpty() && 
-                !resultStructures.getValidItems().isEmpty() && 
-                !resultAttributions.getValidItems().isEmpty()) {
+        if (!resultEmployes.getValidItems().isEmpty() && 
+            !resultStructures.getValidItems().isEmpty() && 
+            !resultAttributions.getValidItems().isEmpty()) {
 
-                if(!hasErrors){
-                    ficheEmployeService.import_trois_fichiers(
+            if(!hasErrors) {
+                ficheEmployeService.import_trois_fichiers(
                     resultEmployes.getValidItems(),
                     resultStructures.getValidItems(),
                     resultAttributions.getValidItems(),
                     session
                 );
-                }
-                
-            } else {
-                hasErrors = true;
-                messageBuilder.append("<br/><br/>Importation annulée : un ou plusieurs fichiers ne contiennent aucune donnée valide.");
             }
-
-            redirectAttributes.addFlashAttribute("message", messageBuilder.toString());
-
-            if (hasErrors) {
-                redirectAttributes.addFlashAttribute("error", true);
-            }
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", 
-                "Échec critique de l'importation : " + e.getMessage());
-            redirectAttributes.addFlashAttribute("error", true);
+        } else {
+            hasErrors = true;
+            messageBuilder.append("<br/><br/>Importation annulée : un ou plusieurs fichiers ne contiennent aucune donnée valide.");
         }
 
-        return "redirect:/import-csv";
+        redirectAttributes.addFlashAttribute("message", messageBuilder.toString());
+        redirectAttributes.addFlashAttribute("error", hasErrors);
+
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("message", 
+            "Échec critique de l'importation : " + e.getMessage());
+        redirectAttributes.addFlashAttribute("error", true);
     }
+
+    return "redirect:/import-csv";
+}
     
     // Dans votre contrôleur
     @PostMapping("/reinitialiser-base")

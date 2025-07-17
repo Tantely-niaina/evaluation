@@ -45,11 +45,11 @@ public class Reinicialisationbaseservice {
             logger.info("SID récupéré et stocké en session : {}", sid);
         }
 
-        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.import.import_extract.reinitialiser_les_donner_dans_le_base";
+        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.page.import_extract.reinitialiser_les_donner_dans_le_base";
         logger.info("URL de la requête de réinitialisation : {}", requestUrl);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", sid);
+        headers.add(HttpHeaders.COOKIE, "sid=" + sid);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
         HttpEntity<String> request = new HttpEntity<>(headers);

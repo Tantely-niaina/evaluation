@@ -17,11 +17,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpSession;
 import mg.erpnext.model.AttributionCSV;
 import mg.erpnext.model.EmployeCSV;
 import mg.erpnext.model.SalaryStructureCSV;
-
-import jakarta.servlet.http.HttpSession;
 
 @Service
 public class FicheEmployeCSVService {
@@ -36,7 +36,7 @@ public class FicheEmployeCSVService {
             throw new RuntimeException("Session ERPNext absente ou expirée.");
         }
 
-        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.import.import_extract.import_employes";
+        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.page.import_extract.import_employes";
 
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonData = objectMapper.writeValueAsString(listCustomers);
@@ -46,7 +46,7 @@ public class FicheEmployeCSVService {
         // headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", (String) session.getAttribute("frappe_sid")); 
+        headers.add(HttpHeaders.COOKIE, "sid=" + (String) session.getAttribute("frappe_sid"));
         // headers.set("Cookie", "sid=" + sid);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         
@@ -103,13 +103,13 @@ public class FicheEmployeCSVService {
             throw new RuntimeException("Session ERPNext absente ou expirée.");
         }
         
-        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.import.import_extract.import_structures";
+        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.page.import_extract.import_structures";
         
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonData = objectMapper.writeValueAsString(structures);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", (String) session.getAttribute("frappe_sid")); 
+        headers.add(HttpHeaders.COOKIE, "sid=" + (String) session.getAttribute("frappe_sid"));
         // headers.set("Cookie", "sid=" + sid);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         
@@ -172,13 +172,13 @@ public class FicheEmployeCSVService {
         String jsonData = objectMapper.writeValueAsString(allData);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", (String) session.getAttribute("frappe_sid")); 
+        headers.add(HttpHeaders.COOKIE, "sid=" + (String) session.getAttribute("frappe_sid"));
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         
         HttpEntity<String> request = new HttpEntity<>(jsonData, headers);
         RestTemplate restTemplate = new RestTemplate();
         
-        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.import.import_extract.import_trois_fichiers";
+        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.page.import_extract.import_trois_fichiers";
         
         ResponseEntity<String> response = restTemplate.exchange(
             requestUrl, 

@@ -18,11 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpSession;
 import mg.erpnext.model.AttributionCSV;
 import mg.erpnext.model.EmployeCSV;
 import mg.erpnext.model.ParseResult;
-
-import jakarta.servlet.http.HttpSession;
 
 @Service
 public class AttributionCSVService {
@@ -143,13 +143,13 @@ public class AttributionCSVService {
             throw new RuntimeException("Session ERPNext absente ou expirée.");
         }
         
-        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.import.import_extract.import_attributions";
+        String requestUrl = "http://erpnext.localhost:8000/api/method/erpnext.erpnext_integrations.page.import_extract.import_attributions";
         
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonData = objectMapper.writeValueAsString(attributions);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", (String) session.getAttribute("frappe_sid")); 
+        headers.add(HttpHeaders.COOKIE, "sid=" + (String) session.getAttribute("frappe_sid"));
         // headers.set("Cookie", "sid=" + sid);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         

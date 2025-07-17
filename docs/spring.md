@@ -632,3 +632,6 @@ class UserRepositoryTest {
 - [Springdoc OpenAPI](https://springdoc.org/)
 - [Testcontainers](https://www.testcontainers.org/) pour les tests d’intégration avec BDD/Docker
 - [Cheat Sheets Spring](https://www.cheatography.com/tags/spring/)
+
+anarana miampy isana liste salaire de mois 
+resultat recherche asina page afaka manova salaire de base.

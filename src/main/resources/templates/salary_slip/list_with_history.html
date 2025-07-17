@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/default :: html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Salary Slips avec Composants</title>
+</head>
+<body>
+      <div th:fragment="content" id="content">
+        <div class="minimal-card">
+            <h2 class="minimal-title">hisotrique</h2>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom</th>
+                            <th>old salaire</th>
+                            <th>new salaire</th>
+                            <th>update at</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="hisotrique : ${historys}">
+                            <td th:text="${hisotrique.emplouye_name}"></td>
+                            <td th:text="${hisotrique.old_salary_slip}"></td>
+                            <td th:text="${hisotrique.new_salary_slip}"></td>
+                            <td th:text="${hisotrique.updated_at}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div> 
+          <th:block th:fragment="scripts">
+        <script>
+            // Optionnel : désactiver le bouton submit après clic pour éviter les doubles soumissions
+            document.querySelector('form')?.addEventListener('submit', function() {
+                this.querySelector('button[type="submit"]').disabled = true;
+            });
+        </script>
+    </th:block>   
+</body>
+</html>

@@ -1,12 +1,15 @@
 package mg.erpnext.service;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import mg.erpnext.model.ApiResponse;
 import mg.erpnext.model.Employee;
+import mg.erpnext.model.History;
 import mg.erpnext.model.MonthReduction;
 import mg.erpnext.model.SalarySlip;
 import mg.erpnext.model.SalarySlipAssignment;
@@ -42,8 +46,13 @@ public class SalarySlipService {
     private SalarySlipAssignmentService salarySlipAssignmentService;
 
     @Autowired
+    private HistoryService historyService;
+
+    @Autowired
     private MonthReductionService monthReductionService;
 
+    @Autowired 
+    private SalarySlipWithComponentsService salarySlipWithComponentsService;
     private static final String SALARY_SLIP_LIST = "Salary Slip?fields=";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -461,6 +470,19 @@ public class SalarySlipService {
                 if(reductionApplied && created_ssa.getData() != null && cancelled_ssa.getData() != null) {
                     restored_ssa = salarySlipAssignmentService.restoreSalaryStructureAssignment(session, created_ssa, cancelled_ssa, employee.getEmployee_name());
                 }
+                /*if(ecraser && occupiedMonths.contains(ymStr)){
+                    History history = new History();
+                    history.setEmplouye_name(employee.getEmployee_name());
+                    history.setOld_salary_slip(cancelled_ssa.getData().getBase());
+                    history.setNew_salary_slip(updated_ssa.getData().getBase());
+                    history.setUpdated_at(LocalDateTime.now());
+                    try {
+                        historyService.insertMonthReduction(history);
+                        logger.info("Historique inséré pour l'employé: {}", employee.getEmployee_name());
+                    } catch (SQLException e) {
+                        logger.error("Erreur lors de l'insertion dans l'historique: {}", e.getMessage(), e);
+                    }
+                }*/
             }
             logger.info("Nombre de fiches de paie créées: {}", createdSlips.size());
             return new ApiResponse<>(createdSlips);
@@ -649,6 +671,25 @@ public class SalarySlipService {
                     logger.warn("Erreur lors de l'annulation d'un SSA2: {}", ignore.getMessage());
                 }
             }
+                            // 10. Insérer dans l’historique les anciens et nouveaux SalarySlip
+                    for (int i = 0; i < ss1.size(); i++) {
+                        SalarySlip oldSlip = ss1.get(i);
+                        SalarySlip newSlip = ss2.get(i);
+                        SalarySlipAssignment oldAssignment = ssa1.get(i);
+    SalarySlipAssignment newAssignment = ssa2.get(i);
+                        History history = new History();
+                        history.setEmplouye_name(oldSlip.getEmployee()); // ou getEmployeeName()
+                        history.setOld_salary_slip(oldAssignment.getBase());   // nom du salary slip ancien
+                        history.setNew_salary_slip(newAssignment.getBase());   // nom du salary slip nouveau
+                        history.setUpdated_at(LocalDateTime.now());      // date/heure actuelle
+
+                        try {
+                            historyService.insertMonthReduction(history);
+                            logger.info("Insertion dans l'historique réussie pour employé: {}", oldSlip.getEmployee());
+                        } catch (SQLException e) {
+                            logger.error("Erreur lors de l'insertion dans l'historique pour employé: {}", oldSlip.getEmployee(), e);
+                        }
+                    }
 
             // 9. Recréer les SalarySlipAssignment originaux (ssa1)
             ApiResponse<List<SalarySlipAssignment>> recreatedSsa1Resp =
@@ -688,6 +729,48 @@ public class SalarySlipService {
         logger.info("getAllBaseValues() retourne {} valeurs de base", bases.size());
         return bases;
     }
+    //salary slip
+   public List<Double> getAllBaseValue(HttpSession session) {
+    logger.info("Appel getAllBaseValue() pour toutes les fiches de paie");
+    List<Double> bases = new ArrayList<>();
+    try {
+        ApiResponse<List<SalarySlip>> response = salarySlipWithComponentsService.fetchSalarySlipsWithComponents(session);
+        if (response.getData() != null) {
+            for (SalarySlip slip : response.getData()) {
+                Double base = null;
+                try {
+                    // earnings est une List<Map<String, Object>>
+                    if (slip.getEarnings() instanceof List<?>) {
+                        List<?> earningsList = (List<?>) slip.getEarnings();
+                        for (Object earningObj : earningsList) {
+                            if (earningObj instanceof Map) {
+                                Map<?,?> earning = (Map<?,?>) earningObj;
+                                Object comp = earning.get("salary_component");
+                                if (comp != null && "Basic".equalsIgnoreCase(comp.toString())) {
+                                    Object amountObj = earning.get("amount");
+                                    if (amountObj instanceof Number) {
+                                        base = ((Number) amountObj).doubleValue();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignore) {
+                    logger.warn("Impossible d'extraire le salaire de base pour le slip: {}", slip.getName());
+                }
+                if (base != null) {
+                    bases.add(base);
+                }                                                                                                        
+            }
+        }
+    } catch (Exception e) {
+        logger.error("Erreur dans getAllBaseValue(): {}", e.getMessage(), e);
+    }
+    logger.info("getAllBaseValue() retourne {} valeurs de base", bases.size());
+    return bases;
+}
+
   public ApiResponse<SalarySlip> cancelSalarySlipByMonthAndEmployee(
             String monthYear, String employeeName, HttpSession session) {
         logger.info("Appel cancelSalarySlipByMonthAndEmployee() pour mois: {}, employé: {}", monthYear, employeeName);
