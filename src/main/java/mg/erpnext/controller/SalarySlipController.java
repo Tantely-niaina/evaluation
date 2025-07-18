@@ -284,5 +284,24 @@ public class SalarySlipController {
         model.addAttribute("error", response.getError());
         return "salary_slip/update_base_salary";
     }
+    @PostMapping("/salary_slip/update_base_salary")
+    public String updateBaseSalary(
+            @RequestParam("name") String slip_name,
+            @RequestParam("baseSalary") double baseSalary,
+            @RequestParam("employee_name") String employee_name,
+            HttpSession session,
+            Model model) {
+        try {
+            ApiResponse<String> response = salarySlipService.updateBaseSalary(slip_name, baseSalary, session,employee_name);
+            if (response.getError() != null) {
+                model.addAttribute("error", response.getError());
+            } else {        
+                model.addAttribute("success", response.getData());
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la mise à jour : " + e.getMessage());
+        }
+        return "redirect:/salary_slip/alea4";    
 
+}
 }

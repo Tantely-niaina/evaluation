@@ -8,16 +8,27 @@
     <div th:fragment="content" id="content">
         <div class="minimal-card">
             <h2 class="minimal-title">Modification du Salaire de Base</h2>
+             <p th:text="${salary_slip.name}"></p> <br> <p th:text="salaire_slip.posting_date"></p>
             <form th:action="@{/salary_slip/update_base_salary}" method="post">
-                <p>
+                <input type="hidden" name="name" th:value="${salary_slip.name}" />
+                <input type="hidden" name="employee_name" th:value="${salary_slip.employee_name}" />
                     <label for="baseSalary" class="form-label">Salaire de Base</label>
-                    <input type="number" class="form-control" id="baseSalary" name="baseSalary" 
-                           th:value="${salary_slip.baseSalary}" required>
-                </p>
+                    <input type="number" class="form-control" id="baseSalary" name="baseSalary"  required>
+                    <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            </div>
             </form>
             <div th:if="${success}" class="alert alert-success mt-3" th:text="${success}"></div>
             <div th:if="${error}" class="alert alert-danger mt-3" th:text="${error}"></div>
         </div>
     </div>
+        <th:block th:fragment="scripts">
+        <script>
+            // Optionnel : désactiver le bouton submit après clic pour éviter les doubles soumissions
+            document.querySelector('form')?.addEventListener('submit', function() {
+                this.querySelector('button[type="submit"]').disabled = true;
+            });
+        </script>
+    </th:block>
 </body>
 </html>

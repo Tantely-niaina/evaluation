@@ -814,4 +814,113 @@ public Double calculeMoyenne(List<Double> base) {
     }
     return total / base.size();
 }
+
+public ApiResponse<String> updateBaseSalary(
+        String slipName, double newBaseSalary, HttpSession session, String employeeName) {
+    logger.info("Appel updateBaseSalary() pour slip: {}, nouveau salaire: {}", slipName, newBaseSalary);
+    try {
+        // 1. Récupérer le SalarySlip
+        ApiResponse<SalarySlip> slipResp = getSalarySlipDetails(slipName, session);
+        if (slipResp.getData() == null) {
+            return new ApiResponse<>("Fiche de paie non trouvée: " + slipName);
+        }
+        SalarySlip slip = slipResp.getData();
+
+        // 2. Récupérer le SalarySlipAssignment actuel
+        ApiResponse<List<SalarySlipAssignment>> ssaResp = 
+            salarySlipAssignmentService.searchSalaryStructureAssignmentByEmployee(session, slip.getEmployee());
+        if (ssaResp.getData() == null || ssaResp.getData().isEmpty()) {
+            return new ApiResponse<>("Aucun Salary Structure Assignment trouvé pour cet employé.");
+        }
+
+        // Trouver le SSA valide pour la période de la fiche de paie
+        SalarySlipAssignment currentSsa = findValidSsaForPeriod(ssaResp.getData(), slip.getStart_date(), slip.getEnd_date());
+        if (currentSsa == null) {
+            return new ApiResponse<>("Aucun Salary Structure Assignment valide trouvé pour cette période.");
+        }
+
+        // 3. Annuler le SalarySlip existant
+        ApiResponse<List<SalarySlip>> cancelResp = cancelSalarySlips(Arrays.asList(slip), session);
+        if (cancelResp.getError() != null) {
+            return new ApiResponse<>("Erreur lors de l'annulation de la fiche: " + cancelResp.getError());
+        }
+
+        // 4. Annuler le SSA actuel
+        ApiResponse<SalarySlipAssignment> cancelledSsaResp = 
+            salarySlipAssignmentService.cancelSalaryStructureAssignment(
+                session, 
+                YearMonth.parse(slip.getStart_date().substring(0, 7)).format(DateTimeFormatter.ofPattern("MM-yy")),
+                slip.getEmployee()
+            );
+        if (cancelledSsaResp.getError() != null) {
+            return new ApiResponse<>("Erreur lors de l'annulation du SSA: " + cancelledSsaResp.getError());
+        }
+
+        // 5. Créer un nouveau SSA avec le nouveau salaire de base
+        SalarySlipAssignment newSsa = new SalarySlipAssignment();
+        newSsa.setEmployee(currentSsa.getEmployee());
+        newSsa.setEmployee_name(currentSsa.getEmployee_name());
+        newSsa.setSalary_structure(currentSsa.getSalary_structure());
+        newSsa.setFrom_date(currentSsa.getFrom_date());
+        newSsa.setCompany(currentSsa.getCompany());
+        newSsa.setBase(newBaseSalary);
+        newSsa.setDocstatus(1);
+
+        ApiResponse<SalarySlipAssignment> createdSsaResp = 
+            salarySlipAssignmentService.createOneSalarySlipAssignment(new ApiResponse<>(newSsa), session);
+        if (createdSsaResp.getError() != null) {
+            return new ApiResponse<>("Erreur lors de la création du nouveau SSA: " + createdSsaResp.getError());
+        }
+
+        // 6. Recréer le SalarySlip
+        SalarySlip newSlip = createSalarySlipInFrappe(slip, session);
+        
+        // 7. Enregistrer dans l'historique
+        History history = new History();
+        history.setEmplouye_name(employeeName);
+        history.setOld_salary_slip(currentSsa.getBase());
+        history.setNew_salary_slip(newBaseSalary);
+        history.setUpdated_at(LocalDateTime.now());
+        
+        try {
+            historyService.insertMonthReduction(history);
+        } catch (SQLException e) {
+            logger.error("Erreur lors de l'enregistrement dans l'historique", e);
+        }
+
+        return new ApiResponse<>("Mise à jour du salaire de base effectuée avec succès");
+    } catch (Exception e) {
+        logger.error("Erreur dans updateBaseSalary(): {}", e.getMessage(), e);
+        return new ApiResponse<>("Erreur lors de la mise à jour du salaire de base: " + e.getMessage());
+    }
+}
+
+// Méthode utilitaire pour trouver le SSA valide pour une période donnée
+private SalarySlipAssignment findValidSsaForPeriod(List<SalarySlipAssignment> ssas, String startDate, String endDate) {
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    LocalDate periodStart = LocalDate.parse(startDate, dtf);
+    LocalDate periodEnd = LocalDate.parse(endDate, dtf);
+
+    return ssas.stream()
+        .filter(ssa -> ssa.getFrom_date() != null)
+        .filter(ssa -> {
+            try {
+                LocalDate ssaDate = LocalDate.parse(ssa.getFrom_date(), dtf);
+                return !ssaDate.isAfter(periodEnd) && 
+                       (ssaDate.isBefore(periodStart) || ssaDate.isEqual(periodStart));
+            } catch (Exception e) {
+                return false;
+            }
+        })
+        .max((a, b) -> {
+            try {
+                LocalDate da = LocalDate.parse(a.getFrom_date(), dtf);
+                LocalDate db = LocalDate.parse(b.getFrom_date(), dtf);
+                return da.compareTo(db);
+            } catch (Exception e) {
+                return 0;
+            }
+        })
+        .orElse(null);
+}
 }
